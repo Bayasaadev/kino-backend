@@ -1,5 +1,6 @@
 from django.db import models
 
+# 1. Genre model
 class Genre(models.Model):
     name = models.CharField(max_length=50, unique=True)
     description = models.TextField(blank=True)
@@ -7,6 +8,7 @@ class Genre(models.Model):
     def __str__(self):
         return self.name
 
+# 2. Theme model
 class Theme(models.Model):
     name = models.CharField(max_length=50, unique=True)
     description = models.TextField(blank=True)
@@ -14,6 +16,7 @@ class Theme(models.Model):
     def __str__(self):
         return self.name
 
+# 3. Country model
 class Country(models.Model):
     name = models.CharField(max_length=60, unique=True)
     code = models.CharField(max_length=4, unique=True)
@@ -22,6 +25,7 @@ class Country(models.Model):
     def __str__(self):
         return self.name
 
+# 4. Language model
 class Language(models.Model):
     name = models.CharField(max_length=50, unique=True)
     code = models.CharField(max_length=10, unique=True)
@@ -29,6 +33,7 @@ class Language(models.Model):
     def __str__(self):
         return self.name
 
+# 5. Studio model
 class Studio(models.Model):
     name = models.CharField(max_length=100, unique=True)
     description = models.TextField(blank=True)
@@ -38,9 +43,11 @@ class Studio(models.Model):
     def __str__(self):
         return self.name
     
+# 6. Film model
 class Film(models.Model):
     title = models.CharField(max_length=200)
     original_title = models.CharField(max_length=200, blank=True)
+    tagline = models.CharField(max_length=200, blank=True)
     year = models.PositiveIntegerField()
     description = models.TextField(blank=True)
     duration = models.PositiveIntegerField(blank=True, null=True)  # in minutes
