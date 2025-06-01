@@ -5,7 +5,14 @@ from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.views import APIView
 from rest_framework_simplejwt.tokens import RefreshToken
-from .serializers import RegisterSerializer, UserPublicSerializer, UserEditProfileSerializer, UserRoleUpdateSerializer
+from rest_framework_simplejwt.views import TokenObtainPairView
+from .serializers import (
+    RegisterSerializer, 
+    UserPublicSerializer, 
+    UserEditProfileSerializer, 
+    UserRoleUpdateSerializer, 
+    AdminTokenObtainPairSerializer
+)
 from .permissions import IsRoleAdmin
 
 User = get_user_model()
@@ -41,7 +48,15 @@ class UserDetailView(generics.RetrieveAPIView):
     permission_classes = [permissions.AllowAny]
     lookup_field = 'id' 
 
-# 5. Edit Profile API (self only)
+# 5. Profile API (self only)
+class ProfileMeView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request):
+        serializer = UserPublicSerializer(request.user)
+        return Response(serializer.data)
+
+# 6. Edit Profile API (self only)
 class EditProfileView(generics.UpdateAPIView):
     serializer_class = UserEditProfileSerializer
     permission_classes = [permissions.IsAuthenticated]
@@ -49,14 +64,14 @@ class EditProfileView(generics.UpdateAPIView):
     def get_object(self):
         return self.request.user
     
-# 6. Update User's Role (admin only)
+# 7. Update User's Role (admin only)
 class UpdateUserRoleView(generics.UpdateAPIView):
     queryset = User.objects.all()
     serializer_class = UserRoleUpdateSerializer
     permission_classes = [IsRoleAdmin]
     lookup_field = 'id'
 
-# 7. Follow
+# 8. Follow
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def follow_user(request, id):
@@ -69,7 +84,7 @@ def follow_user(request, id):
     except User.DoesNotExist:
         return Response({"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND)
 
-# 8. Unfollow
+# 9. Unfollow
 @api_view(['POST'])
 @permission_classes([IsAuthenticated])
 def unfollow_user(request, id):
@@ -82,7 +97,7 @@ def unfollow_user(request, id):
     except User.DoesNotExist:
         return Response({"detail": "User not found."}, status=status.HTTP_404_NOT_FOUND)
     
-# 9. Followers
+# 10. Followers
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def user_followers(request, id):
@@ -97,7 +112,7 @@ def user_followers(request, id):
     serializer = UserPublicSerializer(followers, many=True, context={'request': request})
     return Response(serializer.data, status=200)
 
-# 10. Following
+# 11. Following
 @api_view(['GET'])
 @permission_classes([AllowAny])
 def user_following(request, id):
@@ -111,3 +126,7 @@ def user_following(request, id):
     following = user.following.all()
     serializer = UserPublicSerializer(following, many=True, context={'request': request})
     return Response(serializer.data, status=200)
+
+# 12. Admin Login
+class AdminTokenObtainPairView(TokenObtainPairView):
+    serializer_class = AdminTokenObtainPairSerializer

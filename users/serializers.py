@@ -1,6 +1,7 @@
-from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
+from rest_framework import serializers
+from rest_framework_simplejwt.serializers import TokenObtainPairSerializer
 
 User = get_user_model()
 
@@ -53,3 +54,10 @@ class UserRoleUpdateSerializer(serializers.ModelSerializer):
     class Meta:
         model = User
         fields = ('role',)
+
+class AdminTokenObtainPairSerializer(TokenObtainPairSerializer):
+    def validate(self, attrs):
+        data = super().validate(attrs)
+        if self.user.role not in ["admin", "staff"]:
+            raise serializers.ValidationError("You are not authorized to access the admin panel.")
+        return data
