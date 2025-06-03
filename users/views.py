@@ -1,5 +1,6 @@
 from django.contrib.auth import get_user_model
-from rest_framework import generics, status, permissions
+from django_filters.rest_framework import DjangoFilterBackend
+from rest_framework import generics, status, permissions, filters
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.response import Response
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -9,11 +10,12 @@ from rest_framework_simplejwt.views import TokenObtainPairView
 from .serializers import (
     RegisterSerializer, 
     UserPublicSerializer, 
+    UserPrivateSerializer,
     UserEditProfileSerializer, 
     UserRoleUpdateSerializer, 
     AdminTokenObtainPairSerializer
 )
-from .permissions import IsRoleAdmin
+from .permissions import IsRoleAdmin, IsRoleAdminOrStaff
 
 User = get_user_model()
 
@@ -48,12 +50,35 @@ class UserDetailView(generics.RetrieveAPIView):
     permission_classes = [permissions.AllowAny]
     lookup_field = 'id' 
 
+# 3.1. User List API (private)
+class UserListPrivateView(generics.ListAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserPrivateSerializer
+    permission_classes = [IsRoleAdminOrStaff]
+    filter_backends = [
+        DjangoFilterBackend,
+        filters.OrderingFilter,
+        filters.SearchFilter,
+    ]
+    filterset_fields = ['role']                     # filter by role
+    ordering_fields = ['id', 'username', 'role']    # allow ordering by id/username/role
+    search_fields = ['username', 'email']           # search by username/email
+    ordering = ['id']                               # default ordering
+    
+
+# 4.1. User Detail API (private)
+class UserDetailPrivateView(generics.RetrieveAPIView):
+    queryset = User.objects.all()
+    serializer_class = UserPrivateSerializer
+    permission_classes = [IsRoleAdminOrStaff]
+    lookup_field = 'id' 
+
 # 5. Profile API (self only)
 class ProfileMeView(APIView):
     permission_classes = [IsAuthenticated]
 
     def get(self, request):
-        serializer = UserPublicSerializer(request.user)
+        serializer = UserPrivateSerializer(request.user)
         return Response(serializer.data)
 
 # 6. Edit Profile API (self only)
